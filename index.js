@@ -1758,14 +1758,27 @@ QuickBooks.prototype.findEstimates = function (criteria, callback) {
  * Finds all Invoices in QuickBooks, optionally matching the specified criteria
  *
  * @param  {object} criteria - (Optional) String or single-valued map converted to a where clause of the form "where key = 'value'"
+ * @param  {object} options - (Optional) Query string parameters, e.g. { include: 'invoiceLink' }
  * @param  {function} callback - Callback function which is called with any error and the list of Invoice
  */
-QuickBooks.prototype.findInvoices = function (criteria, callback) {
-  module.query(this, 'invoice', criteria).then(function (data) {
-    (callback || criteria)(null, data)
-  }).catch(function (err) {
-    (callback || criteria)(err, err)
-  })
+QuickBooks.prototype.findInvoices = function (criteria, options, callback) {
+  var queryWrapper = ({ criteria, options, callback }) =>
+    module
+      .query(this, "invoice", criteria, options)
+      .then((data) => callback(null, data))
+      .catch((err) => callback(err, err));
+
+  if (_.isFunction(criteria)) {
+    queryWrapper({ callback: criteria });
+    return
+  }
+
+  if (_.isFunction(options)) {
+    queryWrapper({ callback: options, criteria });
+    return
+  }
+
+  queryWrapper({ callback, options, criteria });
 }
 
 /**
@@ -2516,13 +2529,15 @@ module.void = function (context, entityName, idOrEntity, callback) {
 // **********************  Query Api **********************
 module.requestPromise = Promise.promisify(module.request)
 
-module.query = function (context, entity, criteria) {
+module.query = function (context, entity, criteria, options) {
 
   // criteria is potentially mutated within this function -
   // so make a copy of it first
   if (!_.isFunction(criteria) && (_.isObject(criteria) || _.isArray(criteria))) {
     criteria = JSON.parse(JSON.stringify(criteria));
   }
+
+  var queryParams = _.isObject(options) ? _.extend({}, options) : {}
 
   var url = '/query?query@@select * from ' + entity
   var count = function (obj) {
@@ -2585,7 +2600,7 @@ module.query = function (context, entity, criteria) {
   url = url.replace('@@', '=')
 
   return new Promise(function (resolve, reject) {
-    module.requestPromise(context, 'get', { url: url }, null).then(function (data) {
+    module.requestPromise(context, 'get', { url: url, qs: queryParams }, null).then(function (data) {
       var fields = Object.keys(data.QueryResponse)
       var key = _.find(fields, function (k) { return k.toLowerCase() === entity.toLowerCase() })
       if (fetchAll) {
@@ -2597,7 +2612,7 @@ module.query = function (context, entity, criteria) {
           } else if (_.isObject(criteria)) {
             criteria.offset = criteria.offset + limit
           }
-          return module.query(context, entity, criteria).then(function (more) {
+          return module.query(context, entity, criteria, queryParams).then(function (more) {
             data.QueryResponse[key] = data.QueryResponse[key].concat(more.QueryResponse[key] || [])
             data.QueryResponse.maxResults = data.QueryResponse.maxResults + (more.QueryResponse.maxResults || 0)
             data.time = more.time || data.time

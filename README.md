@@ -336,7 +336,7 @@ __Arguments__
 * [`findDeposits`](#finddepositscriteria-callback)
 * [`findEmployees`](#findemployeescriteria-callback)
 * [`findEstimates`](#findestimatescriteria-callback)
-* [`findInvoices`](#findinvoicescriteria-callback)
+* [`findInvoices`](#findinvoicescriteria-options-callback)
 * [`findItems`](#finditemscriteria-callback)
 * [`findJournalCodes`](#findjournalcodescriteria-callback)
 * [`findJournalEntries`](#findjournalentriescriteria-callback)
@@ -1639,13 +1639,14 @@ __Arguments__
 * `callback` - Callback function which is called with any error and the list of Estimates
 
 
-#### findInvoices(criteria, callback)
+#### findInvoices(criteria, options, callback)
 
 Finds all Invoices in QuickBooks, optionally matching the specified criteria
 
 __Arguments__
 
 * `criteria` - (Optional) String or single-valued map converted to a where clause of the form "where key = 'value'"
+* `options` - (Optional) Query string parameters. E.g. - `{ include: 'invoiceLink' }` to include invoice payment links.
 * `callback` - Callback function which is called with any error and the list of Invoices
 
 

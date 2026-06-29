@@ -863,9 +863,15 @@ export class QuickBooks {
     sendTo?: string,
     callback?: QuickBooksCallback<any>
   ): void;
+  findInvoices(callback: QuickBooksCallback<QueryResponse<Invoice>>): void;
   findInvoices(
-    criteria: QueryCriteria | QuickBooksCallback<QueryResponse<Invoice>>,
-    callback?: QuickBooksCallback<QueryResponse<Invoice>>
+    criteria: QueryCriteria,
+    callback: QuickBooksCallback<QueryResponse<Invoice>>
+  ): void;
+  findInvoices(
+    criteria: QueryCriteria | null | undefined,
+    options: { [key: string]: any } | null | undefined,
+    callback: QuickBooksCallback<QueryResponse<Invoice>>
   ): void;
 
   // ============================================
